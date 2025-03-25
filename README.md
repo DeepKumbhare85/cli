@@ -5,7 +5,7 @@ Adds MagicMCP configuration to AI IDEs (Cursor, Windsurf, Cline, etc.)
 ## Usage
 
 ```bash
-npx @21st-dev/cli install <client> --api-key <key>
+npx @21st-dev/cli@latest install <client> --api-key <key>
 ```
 
 You can obtain your API key at [21st.dev Magic Console](https://21st.dev/magic/console)
@@ -18,8 +18,8 @@ Add to your IDE's MCP config:
 
 ```json
 {
-  "servers": {
-    "21st-dev/magic": {
+  "mcpServers": {
+    "@21st-dev/magic": {
       "command": "npx",
       "args": ["-y", "@21st-dev/magic@latest", "API_KEY=\"your-api-key\""]
     }

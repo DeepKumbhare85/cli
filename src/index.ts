@@ -9,7 +9,11 @@ export async function install(
   client: ValidClient,
   options?: InstallOptions
 ): Promise<void> {
-  const spinner = ora(`Installing configuration for ${client}...`).start();
+  const capitalizedClient = client.charAt(0).toUpperCase() + client.slice(1);
+
+  const spinner = ora(
+    `Installing configuration for ${capitalizedClient}...`
+  ).start();
 
   try {
     const config = { ...DEFAULT_CONFIG };
@@ -21,7 +25,9 @@ export async function install(
     }
 
     writeConfig(client, config);
-    spinner.succeed(`Successfully installed configuration for ${client}`);
+    spinner.succeed(
+      `Successfully installed configuration for ${capitalizedClient}`
+    );
 
     if (!options?.apiKey) {
       console.log(
@@ -31,10 +37,17 @@ export async function install(
       );
     }
 
-    console.log(chalk.green(`${client} configuration updated successfully`));
+    console.log(
+      chalk.green(`${capitalizedClient} configuration updated successfully`)
+    );
+    console.log(
+      chalk.yellow(
+        `You may need to restart ${capitalizedClient} to see the Magic MCP server.`
+      )
+    );
     await promptForRestart(client);
   } catch (error) {
-    spinner.fail(`Failed to install configuration for ${client}`);
+    spinner.fail(`Failed to install configuration for ${capitalizedClient}`);
     console.error(
       chalk.red(
         `Error: ${error instanceof Error ? error.message : String(error)}`
