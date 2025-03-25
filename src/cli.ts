@@ -19,7 +19,8 @@ program
     "<client>",
     `The client to install for (${VALID_CLIENTS.join(", ")})`
   )
-  .action(async (client: string) => {
+  .option("--api-key <key>", "API key for 21st.dev services")
+  .action(async (client: string, options: { apiKey?: string }) => {
     if (!VALID_CLIENTS.includes(client as any)) {
       console.error(
         chalk.red(
@@ -32,8 +33,13 @@ program
     }
 
     try {
-      await install(client as any);
+      await install(client as any, { apiKey: options.apiKey });
     } catch (error) {
+      console.error(
+        chalk.red(
+          error instanceof Error ? error.message : "Unknown error occurred"
+        )
+      );
       process.exit(1);
     }
   });

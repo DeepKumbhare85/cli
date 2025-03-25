@@ -1,23 +1,28 @@
 # @21st-dev/cli
 
-MCP configuration installer by 21st.dev
-
-## Installation
-
-```bash
-npm install -g @21st-dev/cli
-```
+Adds MagicMCP configuration to AI IDEs (Cursor, Windsurf, Cline, etc.)
 
 ## Usage
 
 ```bash
-mcp-install
+npx @21st-dev/cli install <client> --api-key <key>
 ```
 
-## Requirements
+You can obtain your API key at [21st.dev Magic Console](https://21st.dev/magic/console)
 
-- Node.js >= 18.0.0
+Supported IDEs: cursor, windsurf, cline, claude, witsy, enconvo
 
-## License
+## Manual Installation
 
-ISC
+Add to your IDE's MCP config:
+
+```json
+{
+  "servers": {
+    "@21st-dev/magic": {
+      "command": "npx",
+      "args": ["-y", "@21st-dev/magic@latest", "API_KEY=\"your-api-key\""]
+    }
+  }
+}
+```

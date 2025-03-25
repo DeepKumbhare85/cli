@@ -25,3 +25,7 @@ export interface ServerConfig {
 export interface ClientConfig {
   servers: Record<string, ServerConfig>;
 }
+
+export interface InstallOptions {
+  apiKey?: string;
+}

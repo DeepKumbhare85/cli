@@ -44,22 +44,17 @@ export const clientPaths: Record<string, string> = {
   cursor: path.join(homeDir, ".cursor", "mcp.json"),
 };
 
+export const createMagicArgs = (apiKey: string = "YOUR_API_KEY") => [
+  "-y",
+  "@21st-dev/magic@latest",
+  `API_KEY="${apiKey}"`,
+];
+
 export const DEFAULT_CONFIG: ClientConfig = {
   servers: {
-    "magic-mcp": {
+    "@21st-dev/magic": {
       command: "npx",
-      args: [
-        "-y",
-        "@21st-dev/magic-mcp@latest",
-        "run",
-        "--config",
-        JSON.stringify({
-          // Your predefined configuration here
-          apiKey: "your-api-key",
-          model: "gpt-4",
-          temperature: 0.7,
-        }),
-      ],
+      args: createMagicArgs(),
     },
   },
 };
