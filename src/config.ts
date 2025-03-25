@@ -1,6 +1,6 @@
 import os from "node:os";
 import path from "node:path";
-import type { ClientConfig } from "./types";
+import type { ClientConfig } from "./types.js";
 
 const homeDir = os.homedir();
 

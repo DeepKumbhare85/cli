@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { ValidClient, ClientConfig } from "./types";
-import { clientPaths } from "./config";
+import type { ValidClient, ClientConfig } from "./types.js";
+import { clientPaths } from "./config.js";
 
 export function getConfigPath(client: ValidClient): string {
   const configPath = clientPaths[client];

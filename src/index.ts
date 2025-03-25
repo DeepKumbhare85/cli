@@ -1,7 +1,7 @@
-import type { ValidClient } from "./types";
-import { DEFAULT_CONFIG } from "./config";
-import { writeConfig } from "./utils";
-import { promptForRestart } from "./client";
+import type { ValidClient } from "./types.js";
+import { DEFAULT_CONFIG } from "./config.js";
+import { writeConfig } from "./utils.js";
+import { promptForRestart } from "./client.js";
 import ora from "ora";
 import chalk from "chalk";
 

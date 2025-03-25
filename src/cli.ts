@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { install } from "./index";
-import { VALID_CLIENTS } from "./types";
+import { install } from "./index.js";
+import { VALID_CLIENTS } from "./types.js";
 import chalk from "chalk";
 
 const program = new Command();
 
 program
-  .name("mcp-install")
+  .name("21st-dev-cli")
   .description("Install MCP configuration for various AI clients")
   .version("1.0.0");
 
