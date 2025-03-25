@@ -65,6 +65,6 @@ export const createPlatformCommand = (args: string[]) => {
 
 export const DEFAULT_CONFIG: ClientConfig = {
   mcpServers: {
-    "@21st-dev/magic": createPlatformCommand(createMagicArgs()),
+    "21st-dev/magic-mcp": createPlatformCommand(createMagicArgs()),
   },
 };
