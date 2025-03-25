@@ -1,9 +1,14 @@
 {
   "name": "@21st-dev/cli",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "description": "MCP configuration installer by 21st.dev",
   "main": "dist/index.js",
+  "homepage": "https://21st.dev/magic",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:21st-dev/cli.git"
+  },
   "bin": {
     "21st-dev-cli": "dist/cli.js"
   },
