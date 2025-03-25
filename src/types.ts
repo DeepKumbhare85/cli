@@ -23,7 +23,7 @@ export interface ServerConfig {
 }
 
 export interface ClientConfig {
-  servers: Record<string, ServerConfig>;
+  mcpServers: Record<string, ServerConfig>;
 }
 
 export interface InstallOptions {

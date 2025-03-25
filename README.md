@@ -19,7 +19,7 @@ Add to your IDE's MCP config:
 ```json
 {
   "servers": {
-    "@21st-dev/magic": {
+    "21st-dev/magic": {
       "command": "npx",
       "args": ["-y", "@21st-dev/magic@latest", "API_KEY=\"your-api-key\""]
     }

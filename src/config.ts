@@ -50,11 +50,21 @@ export const createMagicArgs = (apiKey: string = "YOUR_API_KEY") => [
   `API_KEY="${apiKey}"`,
 ];
 
+export const createPlatformCommand = (args: string[]) => {
+  if (process.platform === "win32") {
+    return {
+      command: "cmd",
+      args: ["/c", "npx", ...args],
+    };
+  }
+  return {
+    command: "npx",
+    args,
+  };
+};
+
 export const DEFAULT_CONFIG: ClientConfig = {
-  servers: {
-    "@21st-dev/magic": {
-      command: "npx",
-      args: createMagicArgs(),
-    },
+  mcpServers: {
+    "@21st-dev/magic": createPlatformCommand(createMagicArgs()),
   },
 };

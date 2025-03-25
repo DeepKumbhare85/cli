@@ -15,7 +15,9 @@ export async function install(
     const config = { ...DEFAULT_CONFIG };
 
     if (options?.apiKey) {
-      config.servers["@21st-dev/magic"].args = createMagicArgs(options.apiKey);
+      config.mcpServers["@21st-dev/magic"].args = createMagicArgs(
+        options.apiKey
+      );
     }
 
     writeConfig(client, config);

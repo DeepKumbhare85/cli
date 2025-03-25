@@ -15,17 +15,17 @@ export function readConfig(client: ValidClient): ClientConfig {
   const configPath = getConfigPath(client);
 
   if (!fs.existsSync(configPath)) {
-    return { servers: {} };
+    return { mcpServers: {} };
   }
 
   try {
     const rawConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
     return {
       ...rawConfig,
-      servers: rawConfig.servers || {},
+      mcpServers: rawConfig.mcpServers || {},
     };
   } catch (error) {
-    return { servers: {} };
+    return { mcpServers: {} };
   }
 }
 
@@ -37,11 +37,11 @@ export function writeConfig(client: ValidClient, config: ClientConfig): void {
     fs.mkdirSync(configDir, { recursive: true });
   }
 
-  if (!config.servers || typeof config.servers !== "object") {
-    throw new Error("Invalid servers structure");
+  if (!config.mcpServers || typeof config.mcpServers !== "object") {
+    throw new Error("Invalid mcpServers structure");
   }
 
-  let existingConfig: ClientConfig = { servers: {} };
+  let existingConfig: ClientConfig = { mcpServers: {} };
   try {
     if (fs.existsSync(configPath)) {
       existingConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
@@ -52,7 +52,10 @@ export function writeConfig(client: ValidClient, config: ClientConfig): void {
 
   const mergedConfig = {
     ...existingConfig,
-    ...config,
+    mcpServers: {
+      ...existingConfig.mcpServers,
+      ...config.mcpServers,
+    },
   };
 
   fs.writeFileSync(configPath, JSON.stringify(mergedConfig, null, 2));
