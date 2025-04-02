@@ -1,6 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import type { ClientConfig } from "./types.js";
+import chalk from "chalk";
 
 const homeDir = os.homedir();
 
@@ -44,27 +45,32 @@ export const clientPaths: Record<string, string> = {
   cursor: path.join(homeDir, ".cursor", "mcp.json"),
 };
 
-export const createMagicArgs = (apiKey: string = "YOUR_API_KEY") => [
+export const createMagicArgs = (apiKey: string) => [
   "-y",
   "@21st-dev/magic@latest",
   `API_KEY="${apiKey}"`,
 ];
 
-export const createPlatformCommand = (args: string[]) => {
+export const createPlatformCommand = (passedArgs: string[]) => {
   if (process.platform === "win32") {
     return {
       command: "cmd",
-      args: ["/c", "npx", ...args],
+      args: ["/c", "npx", ...passedArgs],
     };
   }
   return {
     command: "npx",
-    args,
+    args: passedArgs,
   };
 };
 
-export const DEFAULT_CONFIG: ClientConfig = {
-  mcpServers: {
-    "@21st-dev/magic": createPlatformCommand(createMagicArgs()),
-  },
+export const getDefaultConfig = (apiKey: string = "YOUR_API_KEY") => {
+  const magicArgs = createMagicArgs(apiKey);
+  const command = createPlatformCommand(magicArgs);
+
+  return {
+    mcpServers: {
+      "@21st-dev/magic": command,
+    },
+  };
 };

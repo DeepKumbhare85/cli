@@ -1,5 +1,5 @@
 import type { ValidClient, InstallOptions } from "./types.js";
-import { DEFAULT_CONFIG, createMagicArgs } from "./config.js";
+import { getDefaultConfig, createMagicArgs } from "./config.js";
 import { writeConfig } from "./utils.js";
 import { promptForRestart } from "./client.js";
 import ora from "ora";
@@ -16,13 +16,7 @@ export async function install(
   ).start();
 
   try {
-    const config = { ...DEFAULT_CONFIG };
-
-    if (options?.apiKey) {
-      config.mcpServers["@21st-dev/magic"].args = createMagicArgs(
-        options.apiKey
-      );
-    }
+    const config = { ...getDefaultConfig(options?.apiKey) };
 
     writeConfig(client, config);
     spinner.succeed(
