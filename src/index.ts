@@ -1,5 +1,5 @@
 import type { ValidClient, InstallOptions } from "./types.js";
-import { getDefaultConfig, createMagicArgs } from "./config.js";
+import { getDefaultConfig } from "./config.js";
 import { writeConfig } from "./utils.js";
 import { promptForRestart } from "./client.js";
 import ora from "ora";

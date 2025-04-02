@@ -45,7 +45,7 @@ export const clientPaths: Record<string, string> = {
   cursor: path.join(homeDir, ".cursor", "mcp.json"),
 };
 
-export const createMagicArgs = (apiKey: string) => [
+const createMagicArgs = (apiKey: string) => [
   "-y",
   "@21st-dev/magic@latest",
   `API_KEY="${apiKey}"`,
