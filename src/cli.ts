@@ -7,10 +7,21 @@ import chalk from "chalk";
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
+// Note: Native fetch is available in Node.js v18+.
+// If older Node version, consider using a library like node-fetch.
 
 const program = new Command();
 
 const MANIFEST_FILENAME = ".21st-registry.json";
+
+interface ManifestEntry {
+  name: string; // From registry-item.json or the direct name provided
+  sourceUrl?: string; // The URL it was fetched from, if applicable
+  sourceType: "url_success" | "direct_name" | "url_fetch_failed";
+  registryItem?: any; // The actual fetched JSON content if sourceType is 'url_success'
+  fetchError?: string; // Error message if sourceType is 'url_fetch_failed'
+  addedByCLI: true;
+}
 
 program
   .name("21st-dev-cli")
@@ -51,82 +62,173 @@ program
 
 program
   .command("add")
-  .description("Add a new UI component using shadcn/ui and track it.")
-  .argument(
-    "<component>",
-    "Component name or URL (e.g., button, https://21st.dev/r/...)"
+  .description(
+    "Add a new UI component using shadcn/ui and update the registry."
   )
-  .action((component: string) => {
+  .argument(
+    "<componentIdentifier>",
+    "Component name (e.g., button) or URL to component's registry JSON (e.g., https://21st.dev/r/...)"
+  )
+  .action(async (componentIdentifier: string) => {
     const manifestPath = path.join(process.cwd(), MANIFEST_FILENAME);
-    try {
-      console.log(chalk.blue(`Adding component: ${component}...`));
-      execSync(`npx shadcn@latest add ${component}`, { stdio: "inherit" });
-      console.log(chalk.green(`Successfully added component: ${component}!`));
+    let newEntry: ManifestEntry | null = null;
 
-      let manifest: string[] = [];
+    console.log(chalk.blue(`Processing component: ${componentIdentifier}...`));
+
+    try {
+      // Check if componentIdentifier is a URL
+      let isUrl = false;
       try {
-        if (fs.existsSync(manifestPath)) {
-          const fileContent = fs.readFileSync(manifestPath, "utf-8");
-          manifest = JSON.parse(fileContent);
-          if (
-            !Array.isArray(manifest) ||
-            !manifest.every((item) => typeof item === "string")
-          ) {
+        const url = new URL(componentIdentifier);
+        isUrl = url.protocol === "http:" || url.protocol === "https:";
+      } catch (_) {
+        // Not a valid URL, treat as a direct name
+      }
+
+      if (isUrl) {
+        console.log(
+          chalk.blue(
+            `Fetching component details from ${componentIdentifier}...`
+          )
+        );
+        try {
+          const response = await fetch(componentIdentifier);
+          if (!response.ok) {
+            throw new Error(
+              `Failed to fetch: ${response.status} ${response.statusText}`
+            );
+          }
+          const registryItem = await response.json();
+          if (!registryItem.name) {
             console.warn(
               chalk.yellow(
-                `Warning: Manifest file ${MANIFEST_FILENAME} was malformed. Initializing a new one.`
+                "Warning: Fetched JSON does not have a 'name' property. Using identifier as name."
               )
             );
-            manifest = [];
           }
+          newEntry = {
+            name: registryItem.name || componentIdentifier,
+            sourceUrl: componentIdentifier,
+            sourceType: "url_success",
+            registryItem: registryItem,
+            addedByCLI: true,
+          };
+          console.log(
+            chalk.green(`Successfully fetched details for "${newEntry.name}".`)
+          );
+        } catch (fetchError) {
+          const errorMessage =
+            fetchError instanceof Error
+              ? fetchError.message
+              : String(fetchError);
+          console.error(
+            chalk.red(
+              `Error fetching component details from URL: ${errorMessage}`
+            )
+          );
+          newEntry = {
+            name: componentIdentifier, // Use the URL itself as a fallback name
+            sourceUrl: componentIdentifier,
+            sourceType: "url_fetch_failed",
+            fetchError: errorMessage,
+            addedByCLI: true,
+          };
         }
-      } catch (error) {
-        console.warn(
-          chalk.yellow(
-            `Warning: Could not read or parse ${MANIFEST_FILENAME}. Initializing a new one. Error: ${
-              error instanceof Error ? error.message : String(error)
-            }`
+      } else {
+        // Treat as a direct component name
+        newEntry = {
+          name: componentIdentifier,
+          sourceType: "direct_name",
+          addedByCLI: true,
+        };
+        console.log(
+          chalk.blue(
+            `Treating "${componentIdentifier}" as a direct component name.`
           )
         );
-        manifest = [];
       }
 
-      if (!manifest.includes(component)) {
-        manifest.push(component);
-        fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-        console.log(
-          chalk.cyan(
-            `Component "${component}" has been added to ${MANIFEST_FILENAME}.`
-          )
+      // Now, attempt to add with shadcn/ui CLI
+      // We pass the original componentIdentifier to shadcn
+      console.log(
+        chalk.blue(`Running shadcn add for "${componentIdentifier}"...`)
+      );
+      execSync(`npx shadcn@latest add ${componentIdentifier}`, {
+        stdio: "inherit",
+      });
+      console.log(
+        chalk.green(
+          `shadcn add command completed for "${componentIdentifier}".`
+        )
+      );
+
+      // Update manifest only if shadcn add was successful and we have an entry to add
+      if (newEntry) {
+        let manifest: ManifestEntry[] = [];
+        try {
+          if (fs.existsSync(manifestPath)) {
+            const fileContent = fs.readFileSync(manifestPath, "utf-8");
+            manifest = JSON.parse(fileContent);
+            if (!Array.isArray(manifest)) {
+              console.warn(
+                chalk.yellow(
+                  `Warning: Manifest file ${MANIFEST_FILENAME} was malformed. Initializing a new one.`
+                )
+              );
+              manifest = [];
+            }
+          }
+        } catch (error) {
+          console.warn(
+            chalk.yellow(
+              `Warning: Could not read/parse ${MANIFEST_FILENAME}. Initializing. Error: ${
+                error instanceof Error ? error.message : String(error)
+              }`
+            )
+          );
+          manifest = [];
+        }
+
+        // Check for duplicates based on 'name' field of the newEntry
+        const isDuplicate = manifest.some(
+          (entry) =>
+            entry.name === newEntry!.name &&
+            entry.sourceType === newEntry!.sourceType
         );
-      } else {
-        console.log(
-          chalk.cyan(
-            `Component "${component}" was already tracked in ${MANIFEST_FILENAME}.`
-          )
-        );
+
+        if (!isDuplicate) {
+          manifest.push(newEntry);
+          fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+          console.log(
+            chalk.cyan(
+              `"${newEntry.name}" has been added/updated in ${MANIFEST_FILENAME}.`
+            )
+          );
+        } else {
+          console.log(
+            chalk.cyan(
+              `"${newEntry.name}" (type: ${newEntry.sourceType}) was already tracked in ${MANIFEST_FILENAME}.`
+            )
+          );
+        }
       }
     } catch (error) {
+      // This catch block now primarily handles errors from execSync or other unexpected errors
       console.error(
         chalk.red(
-          `Failed to add component "${component}". Error: ${
+          `Failed to process component "${componentIdentifier}". Error: ${
             error instanceof Error ? error.message : "Unknown error"
           }`
         )
       );
-      // Do not exit(1) here if manifest update fails, as the shadcn part might have succeeded.
-      // Consider how to handle partial failures if shadcn succeeds but manifest write fails.
-      // For now, we just log the error and the main process continues.
-      // If shadcn itself failed, execSync would have thrown, and we'd be in this catch block.
-      // If that's the case, and it's a critical failure, then:
       if (
         error &&
-        (error as any).status !== null &&
+        typeof (error as any).status === "number" &&
         (error as any).status !== 0
       ) {
-        // check if it's an error from execSync
-        process.exit(1);
+        process.exit((error as any).status);
       }
+      process.exit(1); // General fallback exit
     }
   });
 
