@@ -12,7 +12,7 @@ import path from "path";
 
 const program = new Command();
 
-const MANIFEST_FILENAME = ".21st-registry.json";
+const MANIFEST_FILENAME = "21st-registry.json";
 
 interface ManifestEntry {
   name: string; // From registry-item.json or the direct name provided
