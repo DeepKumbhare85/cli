@@ -69,167 +69,178 @@ program
     "<componentIdentifier>",
     "Component name (e.g., button) or URL to component's registry JSON (e.g., https://21st.dev/r/...)"
   )
-  .action(async (componentIdentifier: string) => {
-    const manifestPath = path.join(process.cwd(), MANIFEST_FILENAME);
-    let newEntry: ManifestEntry | null = null;
+  .option("--no-install", "Prevent installation of dependencies by shadcn/ui")
+  .action(
+    async (componentIdentifier: string, options: { install?: boolean }) => {
+      const manifestPath = path.join(process.cwd(), MANIFEST_FILENAME);
+      let newEntry: ManifestEntry | null = null;
 
-    console.log(chalk.blue(`Processing component: ${componentIdentifier}...`));
+      console.log(
+        chalk.blue(`Processing component: ${componentIdentifier}...`)
+      );
 
-    try {
-      // Check if componentIdentifier is a URL
-      let isUrl = false;
       try {
-        const url = new URL(componentIdentifier);
-        isUrl = url.protocol === "http:" || url.protocol === "https:";
-      } catch (_) {
-        // Not a valid URL, treat as a direct name
-      }
+        // Check if componentIdentifier is a URL
+        let isUrl = false;
+        try {
+          const url = new URL(componentIdentifier);
+          isUrl = url.protocol === "http:" || url.protocol === "https:";
+        } catch (_) {
+          // Not a valid URL, treat as a direct name
+        }
 
-      if (isUrl) {
+        if (isUrl) {
+          console.log(
+            chalk.blue(
+              `Fetching component details from ${componentIdentifier}...`
+            )
+          );
+          try {
+            const response = await fetch(componentIdentifier);
+            if (!response.ok) {
+              throw new Error(
+                `Failed to fetch: ${response.status} ${response.statusText}`
+              );
+            }
+            const registryItem = await response.json();
+            if (!registryItem.name) {
+              console.warn(
+                chalk.yellow(
+                  "Warning: Fetched JSON does not have a 'name' property. Using identifier as name."
+                )
+              );
+            }
+            newEntry = {
+              name: registryItem.name || componentIdentifier,
+              sourceUrl: componentIdentifier,
+              sourceType: "url_success",
+              registryItem: registryItem,
+              addedByCLI: true,
+            };
+            console.log(
+              chalk.green(
+                `Successfully fetched details for "${newEntry.name}".`
+              )
+            );
+          } catch (fetchError) {
+            const errorMessage =
+              fetchError instanceof Error
+                ? fetchError.message
+                : String(fetchError);
+            console.error(
+              chalk.red(
+                `Error fetching component details from URL: ${errorMessage}`
+              )
+            );
+            newEntry = {
+              name: componentIdentifier, // Use the URL itself as a fallback name
+              sourceUrl: componentIdentifier,
+              sourceType: "url_fetch_failed",
+              fetchError: errorMessage,
+              addedByCLI: true,
+            };
+          }
+        } else {
+          // Treat as a direct component name
+          newEntry = {
+            name: componentIdentifier,
+            sourceType: "direct_name",
+            addedByCLI: true,
+          };
+          console.log(
+            chalk.blue(
+              `Treating "${componentIdentifier}" as a direct component name.`
+            )
+          );
+        }
+
+        // Now, attempt to add with shadcn/ui CLI
+        // We pass the original componentIdentifier to shadcn
         console.log(
-          chalk.blue(
-            `Fetching component details from ${componentIdentifier}...`
+          chalk.blue(`Running shadcn add for "${componentIdentifier}"...`)
+        );
+        let shadcnCommand = `npx ${
+          !options.install ? "-y --no-install" : "-y"
+        } shadcn add ${componentIdentifier}`;
+
+        execSync(shadcnCommand, {
+          stdio: "inherit",
+        });
+        console.log(
+          chalk.green(
+            `shadcn add command completed for "${componentIdentifier}".`
           )
         );
-        try {
-          const response = await fetch(componentIdentifier);
-          if (!response.ok) {
-            throw new Error(
-              `Failed to fetch: ${response.status} ${response.statusText}`
-            );
-          }
-          const registryItem = await response.json();
-          if (!registryItem.name) {
+
+        // Update manifest only if shadcn add was successful and we have an entry to add
+        if (newEntry) {
+          let manifest: ManifestEntry[] = [];
+          try {
+            if (fs.existsSync(manifestPath)) {
+              const fileContent = fs.readFileSync(manifestPath, "utf-8");
+              manifest = JSON.parse(fileContent);
+              if (!Array.isArray(manifest)) {
+                console.warn(
+                  chalk.yellow(
+                    `Warning: Manifest file ${MANIFEST_FILENAME} was malformed. Initializing a new one.`
+                  )
+                );
+                manifest = [];
+              }
+            }
+          } catch (error) {
             console.warn(
               chalk.yellow(
-                "Warning: Fetched JSON does not have a 'name' property. Using identifier as name."
+                `Warning: Could not read/parse ${MANIFEST_FILENAME}. Initializing. Error: ${
+                  error instanceof Error ? error.message : String(error)
+                }`
+              )
+            );
+            manifest = [];
+          }
+
+          // Check for duplicates based on 'name' field of the newEntry
+          const isDuplicate = manifest.some(
+            (entry) =>
+              entry.name === newEntry!.name &&
+              entry.sourceType === newEntry!.sourceType
+          );
+
+          if (!isDuplicate) {
+            manifest.push(newEntry);
+            fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+            console.log(
+              chalk.cyan(
+                `"${newEntry.name}" has been added/updated in ${MANIFEST_FILENAME}.`
+              )
+            );
+          } else {
+            console.log(
+              chalk.cyan(
+                `"${newEntry.name}" (type: ${newEntry.sourceType}) was already tracked in ${MANIFEST_FILENAME}.`
               )
             );
           }
-          newEntry = {
-            name: registryItem.name || componentIdentifier,
-            sourceUrl: componentIdentifier,
-            sourceType: "url_success",
-            registryItem: registryItem,
-            addedByCLI: true,
-          };
-          console.log(
-            chalk.green(`Successfully fetched details for "${newEntry.name}".`)
-          );
-        } catch (fetchError) {
-          const errorMessage =
-            fetchError instanceof Error
-              ? fetchError.message
-              : String(fetchError);
-          console.error(
-            chalk.red(
-              `Error fetching component details from URL: ${errorMessage}`
-            )
-          );
-          newEntry = {
-            name: componentIdentifier, // Use the URL itself as a fallback name
-            sourceUrl: componentIdentifier,
-            sourceType: "url_fetch_failed",
-            fetchError: errorMessage,
-            addedByCLI: true,
-          };
         }
-      } else {
-        // Treat as a direct component name
-        newEntry = {
-          name: componentIdentifier,
-          sourceType: "direct_name",
-          addedByCLI: true,
-        };
-        console.log(
-          chalk.blue(
-            `Treating "${componentIdentifier}" as a direct component name.`
+      } catch (error) {
+        // This catch block now primarily handles errors from execSync or other unexpected errors
+        console.error(
+          chalk.red(
+            `Failed to process component "${componentIdentifier}". Error: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`
           )
         );
-      }
-
-      // Now, attempt to add with shadcn/ui CLI
-      // We pass the original componentIdentifier to shadcn
-      console.log(
-        chalk.blue(`Running shadcn add for "${componentIdentifier}"...`)
-      );
-      execSync(`npx shadcn@latest add ${componentIdentifier}`, {
-        stdio: "inherit",
-      });
-      console.log(
-        chalk.green(
-          `shadcn add command completed for "${componentIdentifier}".`
-        )
-      );
-
-      // Update manifest only if shadcn add was successful and we have an entry to add
-      if (newEntry) {
-        let manifest: ManifestEntry[] = [];
-        try {
-          if (fs.existsSync(manifestPath)) {
-            const fileContent = fs.readFileSync(manifestPath, "utf-8");
-            manifest = JSON.parse(fileContent);
-            if (!Array.isArray(manifest)) {
-              console.warn(
-                chalk.yellow(
-                  `Warning: Manifest file ${MANIFEST_FILENAME} was malformed. Initializing a new one.`
-                )
-              );
-              manifest = [];
-            }
-          }
-        } catch (error) {
-          console.warn(
-            chalk.yellow(
-              `Warning: Could not read/parse ${MANIFEST_FILENAME}. Initializing. Error: ${
-                error instanceof Error ? error.message : String(error)
-              }`
-            )
-          );
-          manifest = [];
+        if (
+          error &&
+          typeof (error as any).status === "number" &&
+          (error as any).status !== 0
+        ) {
+          process.exit((error as any).status);
         }
-
-        // Check for duplicates based on 'name' field of the newEntry
-        const isDuplicate = manifest.some(
-          (entry) =>
-            entry.name === newEntry!.name &&
-            entry.sourceType === newEntry!.sourceType
-        );
-
-        if (!isDuplicate) {
-          manifest.push(newEntry);
-          fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-          console.log(
-            chalk.cyan(
-              `"${newEntry.name}" has been added/updated in ${MANIFEST_FILENAME}.`
-            )
-          );
-        } else {
-          console.log(
-            chalk.cyan(
-              `"${newEntry.name}" (type: ${newEntry.sourceType}) was already tracked in ${MANIFEST_FILENAME}.`
-            )
-          );
-        }
+        process.exit(1); // General fallback exit
       }
-    } catch (error) {
-      // This catch block now primarily handles errors from execSync or other unexpected errors
-      console.error(
-        chalk.red(
-          `Failed to process component "${componentIdentifier}". Error: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`
-        )
-      );
-      if (
-        error &&
-        typeof (error as any).status === "number" &&
-        (error as any).status !== 0
-      ) {
-        process.exit((error as any).status);
-      }
-      process.exit(1); // General fallback exit
     }
-  });
+  );
 
 program.parse();
