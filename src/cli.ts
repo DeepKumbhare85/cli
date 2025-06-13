@@ -456,8 +456,15 @@ program
         // Delete the files
         let deletedCount = 0;
         for (const filePath of filesToDelete) {
-          const fullPath = path.join(process.cwd(), workingDir, filePath);
-          const relativePath = path.join(workingDir, filePath);
+          let formattedPath = normalizePath(filePath);
+          if (formattedPath.startsWith(workingDir)) {
+            formattedPath = normalizePath(
+              formattedPath.replace(workingDir, "")
+            );
+          }
+
+          const fullPath = path.join(process.cwd(), workingDir, formattedPath);
+          const relativePath = path.join(workingDir, formattedPath);
           try {
             if (fs.existsSync(fullPath)) {
               if (options.dryRun) {
