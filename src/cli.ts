@@ -163,7 +163,7 @@ program
         );
         let shadcnCommand = `npx ${
           !options.install ? "-y --no-install" : "-y"
-        } shadcn add ${componentIdentifier}`;
+        } shadcn add --overwrite ${componentIdentifier}`;
 
         execSync(shadcnCommand, {
           stdio: "inherit",
