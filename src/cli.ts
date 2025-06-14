@@ -331,7 +331,7 @@ program
           if (registryItem.files) {
             registryItem.files.forEach((file: any) => {
               if (file && file.path) {
-                files.push(normalizePath(file.path));
+                files.push(normalizePath(workingDir, file.path));
               }
             });
           }
@@ -380,6 +380,7 @@ program
         // Count usage across all components
         for (const entry of manifest) {
           if (entry.registryItem) {
+            registryItems.set(entry.name, entry.registryItem);
             await processRegistryItem(entry.name, entry.registryItem);
           }
         }
@@ -406,36 +407,32 @@ program
           );
         }
 
-        console.log(
-          chalk.blue(
-            `Analyzed file usage across ${manifest.length} ${MANIFEST_FILENAME} components`
-          )
-        );
-
         // Step 2: Remove files that are only used by the component being deleted
         const registryItemsToDelete = new Set<string>();
-        const markFilesToDelete = (registryItem: any) => {
-          if (registryItemsToDelete.has(registryItem.name)) {
+        const markFilesToDelete = (url: string) => {
+          if (registryItemsToDelete.has(url)) {
             return;
           }
-          registryItemsToDelete.add(registryItem.name);
+          registryItemsToDelete.add(url);
+          console.log(chalk.gray(`${url}:`));
 
-          if (registryItem.files) {
-            registryItem.files.forEach((file: any) => {
-              if (file && file.path) {
-                const path = normalizePath(file.path);
-                const count = fileUsageCount.get(path) || 0;
-                fileUsageCount.set(path, count - 1);
-              }
-            });
+          const files = componentFiles.get(url) || [];
+          files.forEach((path: any) => {
+            console.log(chalk.gray(`  - ${path}`));
+            const count = fileUsageCount.get(path) || 0;
+            fileUsageCount.set(path, count - 1);
+          });
 
-            for (const depUrl of registryItem.registryDependencies) {
-              markFilesToDelete(registryItems.get(depUrl));
-            }
+          const deps = registryItems.get(url)?.registryDependencies || [];
+          for (const depUrl of deps) {
+            markFilesToDelete(depUrl);
           }
         };
 
-        markFilesToDelete(componentToRemove.registryItem);
+        console.log(
+          chalk.blue(`Marking files to delete for ${componentToRemove.name}`)
+        );
+        markFilesToDelete(componentToRemove.name);
 
         const filesToDelete: string[] = (
           componentFiles.get(componentToRemove.registryItem.name) || []
@@ -456,28 +453,22 @@ program
         // Delete the files
         let deletedCount = 0;
         for (const filePath of filesToDelete) {
-          let formattedPath = normalizePath(filePath);
-          if (formattedPath.startsWith(workingDir)) {
-            formattedPath = normalizePath(
-              formattedPath.replace(workingDir, "")
-            );
-          }
+          let formattedPath = normalizePath(workingDir, filePath);
+          const fullPath = path.join(process.cwd(), formattedPath);
 
-          const fullPath = path.join(process.cwd(), workingDir, formattedPath);
-          const relativePath = path.join(workingDir, formattedPath);
           try {
             if (fs.existsSync(fullPath)) {
               if (options.dryRun) {
                 console.log(
-                  chalk.green(`Would delete (dry run): ${relativePath}`)
+                  chalk.green(`Would delete (dry run): ${formattedPath}`)
                 );
               } else {
                 fs.unlinkSync(fullPath);
-                console.log(chalk.green(`Deleted: ${relativePath}`));
+                console.log(chalk.green(`Deleted: ${formattedPath}`));
               }
               deletedCount++;
             } else {
-              console.log(chalk.gray(`File not found: ${relativePath}`));
+              console.log(chalk.gray(`File not found: ${formattedPath}`));
             }
           } catch (error) {
             console.error(

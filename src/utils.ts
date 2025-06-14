@@ -111,6 +111,12 @@ export function recreateShadcnRegistryJson() {
 }
 
 // Helper function to normalize file paths
-export const normalizePath = (filePath: string): string => {
-  return filePath.startsWith("/") ? filePath.substring(1) : filePath;
+export const normalizePath = (workingDir: string, filePath: string): string => {
+  let formattedPath = filePath.startsWith("/")
+    ? filePath.substring(1)
+    : filePath;
+  if (!formattedPath.startsWith(workingDir)) {
+    formattedPath = path.join(workingDir, formattedPath);
+  }
+  return formattedPath;
 };
