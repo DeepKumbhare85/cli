@@ -1,14 +1,14 @@
-# @21st-dev/cli
+# @flyonui/cli
 
-Adds MagicMCP configuration to AI IDEs (Cursor, Windsurf, Cline, etc.)
+Adds FlyonUI MCP configuration to AI IDEs (Cursor, Windsurf, Cline, etc.)
 
 ## Usage
 
 ```bash
-npx @21st-dev/cli@latest install <client> --api-key <key>
+npx @flyonui/cli@latest install <client> --api-key <key>
 ```
 
-You can obtain your API key at [21st.dev Magic Console](https://21st.dev/magic/console)
+You can obtain your API key at [flyonui.com Magic Console](https://flyonui.com/)
 
 Supported IDEs: cursor, windsurf, cline, claude, witsy, enconvo
 
@@ -19,9 +19,9 @@ Add to your IDE's MCP config:
 ```json
 {
   "mcpServers": {
-    "@21st-dev/magic": {
+    "@flyonui/cli": {
       "command": "npx",
-      "args": ["-y", "@21st-dev/magic@latest", "API_KEY=\"your-api-key\""]
+      "args": ["-y", "@flyonui/cli@latest", "API_KEY=\"your-api-key\""]
     }
   }
 }

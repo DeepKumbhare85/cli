@@ -1,7 +1,5 @@
 import os from "node:os";
 import path from "node:path";
-import type { ClientConfig } from "./types.js";
-import chalk from "chalk";
 
 const homeDir = os.homedir();
 
@@ -47,7 +45,7 @@ export const clientPaths: Record<string, string> = {
 
 const createMagicArgs = (apiKey: string) => [
   "-y",
-  "@21st-dev/magic@latest",
+  "flyonui-mcp-test",
   `API_KEY="${apiKey}"`,
 ];
 
@@ -70,7 +68,7 @@ export const getDefaultConfig = (apiKey: string = "YOUR_API_KEY") => {
 
   return {
     mcpServers: {
-      "@21st-dev/magic": command,
+      "@flyonui/cli": command,
     },
   };
 };
