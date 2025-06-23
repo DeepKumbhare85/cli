@@ -1,6 +1,6 @@
 {
   "name": "flyonui-cli-test",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "type": "module",
   "description": "MCP configuration installer by FlyonUI",
   "main": "dist/index.js",
