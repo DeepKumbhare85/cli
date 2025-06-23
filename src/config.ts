@@ -68,7 +68,7 @@ export const getDefaultConfig = (apiKey: string = "YOUR_API_KEY") => {
 
   return {
     mcpServers: {
-      "flyonui-cli-test": command,
+      "flyonui-mcp-test": command,
     },
   };
 };

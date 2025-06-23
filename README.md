@@ -5,7 +5,7 @@ Adds FlyonUI MCP configuration to AI IDEs (Cursor, Windsurf, Cline, etc.)
 ## Usage
 
 ```bash
-npx flyonui-cli-test install <client> --api-key <key>
+npx -y flyonui-cli-test install <client> --api-key <key>
 ```
 
 You can obtain your API key at [flyonui.com Magic Console](https://flyonui.com/)
@@ -19,7 +19,7 @@ Add to your IDE's MCP config:
 ```json
 {
   "mcpServers": {
-    "flyonui-cli-test": {
+    "flyonui-mcp-test": {
       "command": "npx",
       "args": ["-y", "flyonui-mcp-test", "API_KEY=\"your-api-key\""]
     }
