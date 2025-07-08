@@ -43,9 +43,9 @@ export const clientPaths: Record<string, string> = {
   cursor: path.join(homeDir, ".cursor", "mcp.json"),
 };
 
-const createMagicArgs = (apiKey: string) => [
+const createArgs = (apiKey: string) => [
   "-y",
-  "flyonui-mcp-test",
+  "flyonui-mcp",
   `API_KEY="${apiKey}"`,
 ];
 
@@ -63,12 +63,12 @@ export const createPlatformCommand = (passedArgs: string[]) => {
 };
 
 export const getDefaultConfig = (apiKey: string = "YOUR_API_KEY") => {
-  const magicArgs = createMagicArgs(apiKey);
-  const command = createPlatformCommand(magicArgs);
+  const args = createArgs(apiKey);
+  const command = createPlatformCommand(args);
 
   return {
     mcpServers: {
-      "flyonui-mcp-test": command,
+      "flyonui-mcp": command,
     },
   };
 };

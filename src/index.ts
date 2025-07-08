@@ -1,9 +1,9 @@
-import type { ValidClient, InstallOptions } from "./types.js";
-import { getDefaultConfig } from "./config.js";
-import { writeConfig } from "./utils.js";
-import { promptForRestart } from "./client.js";
-import ora from "ora";
 import chalk from "chalk";
+import ora from "ora";
+import { promptForRestart } from "./client.js";
+import { getDefaultConfig } from "./config.js";
+import type { InstallOptions, ValidClient } from "./types.js";
+import { writeConfig } from "./utils.js";
 
 export async function install(
   client: ValidClient,
@@ -36,7 +36,7 @@ export async function install(
     );
     console.log(
       chalk.yellow(
-        `You may need to restart ${capitalizedClient} to see the Magic MCP server.`
+        `You may need to restart ${capitalizedClient} to see the FlyonUI MCP server.`
       )
     );
     await promptForRestart(client);

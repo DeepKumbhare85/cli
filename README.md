@@ -1,14 +1,14 @@
-# flyonui-cli-test
+# flyonui-cli
 
 Adds FlyonUI MCP configuration to AI IDEs (Cursor, Windsurf, Cline, etc.)
 
 ## Usage
 
 ```bash
-npx -y flyonui-cli-test install <client> --api-key <key>
+npx -y flyonui-cli install <client> --api-key <key>
 ```
 
-You can obtain your API key at [flyonui.com Magic Console](https://flyonui.com/)
+Use FlyonUI PRO License key as your API key at [flyonui.com](https://flyonui.com/)
 
 Supported IDEs: cursor, windsurf, cline, claude, witsy, enconvo
 
@@ -19,9 +19,13 @@ Add to your IDE's MCP config:
 ```json
 {
   "mcpServers": {
-    "flyonui-mcp-test": {
+    "flyonui-mcp": {
       "command": "npx",
-      "args": ["-y", "flyonui-mcp-test", "API_KEY=\"your-api-key\""]
+      "args": [
+        "-y",
+        "flyonui-mcp",
+        "API_KEY=\"your-api-key\""
+      ]
     }
   }
 }

@@ -11,7 +11,7 @@ const program = new Command();
 
 program
   .name("flyonui-cli")
-  .description("Install MCP configuration for various AI clients")
+  .description("Install FlyonUI MCP configuration for various AI clients")
   .version("1.0.0");
 
 program
